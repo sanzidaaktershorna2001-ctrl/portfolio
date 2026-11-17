@@ -34,8 +34,9 @@ jobs:
 
       - run: npm ci
 
+      # next/font downloads Google Fonts at build time; retry once if that network call hiccups
       - name: Build static site
-        run: npm run build
+        run: npm run build || (echo "Build failed, retrying in 30s..." && sleep 30 && npm run build)
         env:
           STATIC_EXPORT: "1"
           NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path }}
