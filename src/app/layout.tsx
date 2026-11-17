@@ -16,6 +16,24 @@ const serif = Instrument_Serif({
   display: "swap",
 });
 
+/**
+ * Cleans the address bar: drops utm_* and common ad click IDs, keeps every other
+ * query parameter and the #hash, and preserves history state. No reload.
+ */
+const stripTrackingParams = `(function () {
+  try {
+    var url = new URL(window.location.href);
+    var params = url.searchParams;
+    var tracking = /^(utm_[a-z0-9_]+|gclid|gbraid|wbraid|fbclid|msclkid|mc_cid|mc_eid)$/i;
+    var remove = [];
+    params.forEach(function (_, key) { if (tracking.test(key)) remove.push(key); });
+    if (!remove.length) return;
+    remove.forEach(function (key) { params.delete(key); });
+    var query = params.toString();
+    window.history.replaceState(window.history.state, "", url.pathname + (query ? "?" + query : "") + url.hash);
+  } catch (e) {}
+})();`;
+
 const title = `${site.name} — ${site.role}`;
 
 export const metadata: Metadata = {
@@ -36,6 +54,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Enables scroll-reveal animations only when JS runs; without JS all content stays visible. */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+        {/* Removes tracking parameters (utm_*, gclid, fbclid…) from the address bar before the page renders. */}
+        <script dangerouslySetInnerHTML={{ __html: stripTrackingParams }} />
       </head>
       <body>
         <a
